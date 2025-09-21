@@ -1,5 +1,5 @@
 // list/list.c
-//
+// 
 // Implementation for linked list.
 //
 // <Author>
@@ -18,7 +18,7 @@ list_t *list_alloc() {
     return l;
 }
 
-/* Free the list and all nodes (heap). Safe with NULL. */
+/* Free the list and all nodes. */
 void list_free(list_t *l) {
     if (l == NULL) return;
     node_t *cur = l->head;
@@ -30,43 +30,36 @@ void list_free(list_t *l) {
     free(l);
 }
 
-/* Return a malloc'd string representation of the list. Caller should free it. */
+/* Return a malloc'd string representation of the list. */
 char * listToString(list_t *l) {
-    size_t cap = 1024 * 8;
+    size_t cap = 1024;
     char *buf = (char *) malloc(cap);
     if (buf == NULL) return NULL;
     size_t pos = 0;
     buf[0] = '\0';
 
-    if (l == NULL) {
+    if (l == NULL || l->head == NULL) {
         snprintf(buf, cap, "NULL");
         return buf;
     }
 
-node_t *curr = 1->head;
-if (curr == NULL) {
-    snprintf(buf, cap, "NULL");
-    return buf;
-}
-
-while (curr != NULL) {
-    int written = snprintf(buf + pos, cap - pos, "%d->, curr->value);
-    if (written < 0) break; /* encoding error */
+    node_t *curr = l->head;
+    while (curr != NULL) {
+        int written = snprintf(buf + pos, cap - pos, "%d->", curr->value);
+        if (written < 0) break;
         pos += (size_t) written;
-        if (pos + 64 >= cap) { /* grow if necessary */
+        if (pos + 64 >= cap) {
             cap *= 2;
             char *tmp = realloc(buf, cap);
-            if (!tmp) break; /* keep existing buffer */
+            if (!tmp) break;
             buf = tmp;
         }
         curr = curr->next;
     }
-    /* append NULL */
     snprintf(buf + pos, cap - pos, "NULL");
     return buf;
 }
 
-/* Print convenience function (stack-allocated format call). */
 void list_print(list_t *l) {
     char *s = listToString(l);
     if (s) {
@@ -86,7 +79,7 @@ node_t * getNode(elem value) {
     return mynode;
 }
 
-/* Return the number of nodes in the list (stack-local counter). */
+/* Return the number of nodes in the list. */
 int list_length(list_t *l) {
     if (l == NULL) return 0;
     int count = 0;
@@ -98,7 +91,7 @@ int list_length(list_t *l) {
     return count;
 }
 
-/* Add to back of list. Heap allocates the new node. */
+/* Add to back of list. */
 void list_add_to_back(list_t *l, elem value) {
     if (l == NULL) return;
     node_t *n = getNode(value);
@@ -121,23 +114,20 @@ void list_add_to_front(list_t *l, elem value) {
     l->head = n;
 }
 
-/* Insert at 1-based index. If index <= 1 insert at front. If index > length+1 insert at back. */
+/* Insert at 0-based index. If index <= 0 insert at front. If index >= length insert at back. */
 void list_add_at_index(list_t *l, elem value, int index) {
     if (l == NULL) return;
-    if (index <= 1 || l->head == NULL) {
-        /* If list empty or index <=1, insert at front. */
+    if (index <= 0 || l->head == NULL) {
         list_add_to_front(l, value);
         return;
     }
     int len = list_length(l);
-    if (index > len + 1) {
-        /* out of bounds -> append to back */
+    if (index >= len) {
         list_add_to_back(l, value);
         return;
     }
-    /* walk to node before insertion point */
     node_t *cur = l->head;
-    int i = 1;
+    int i = 0;
     while (cur != NULL && i < index - 1) {
         cur = cur->next;
         i++;
@@ -152,13 +142,11 @@ void list_add_at_index(list_t *l, elem value, int index) {
     cur->next = n;
 }
 
-
-/* Remove from back, return value or -1 on error. */
-elem list_remove_from_back(list-t *1) {
-    if (l == NULL || l->head == NULL) return -1;
+/* Remove from back, return value or 0 on error. */
+elem list_remove_from_back(list_t *l) {
+    if (l == NULL || l->head == NULL) return 0;
     node_t *cur = l->head;
     if (cur->next == NULL) {
-        /* single element */
         elem v = cur->value;
         free(cur);
         l->head = NULL;
@@ -172,9 +160,9 @@ elem list_remove_from_back(list-t *1) {
     return v;
 }
 
-/* Remove from front, return value or -1 on error. */
+/* Remove from front, return value or 0 on error. */
 elem list_remove_from_front(list_t *l) {
-    if (l == NULL || l->head == NULL) return -1;
+    if (l == NULL || l->head == NULL) return 0;
     node_t *first = l->head;
     elem v = first->value;
     l->head = first->next;
@@ -182,19 +170,23 @@ elem list_remove_from_front(list_t *l) {
     return v;
 }
 
-/* Remove at 1-based index. */
+/* Remove at 0-based index. If index <= 0 remove front, if index >= length-1 remove back. */
 elem list_remove_at_index(list_t *l, int index) {
-    if (l == NULL || l->head == NULL) return -1;
-    if (index <= 1) {
+    if (l == NULL || l->head == NULL) return 0;
+    int len = list_length(l);
+    if (index <= 0) {
         return list_remove_from_front(l);
     }
+    if (index >= len - 1) {
+        return list_remove_from_back(l);
+    }
     node_t *cur = l->head;
-    int i = 1;
+    int i = 0;
     while (cur != NULL && i < index - 1) {
         cur = cur->next;
         i++;
     }
-    if (cur == NULL || cur->next == NULL) return -1;
+    if (cur == NULL || cur->next == NULL) return 0;
     node_t *victim = cur->next;
     elem v = victim->value;
     cur->next = victim->next;
@@ -213,24 +205,24 @@ bool list_is_in(list_t *l, elem value) {
     return false;
 }
 
-/* Return element at 1-based index, or -1 on error. */
+/* Return element at 0-based index, or 0 on error. */
 elem list_get_elem_at(list_t *l, int index) {
-    if (l == NULL || index < 1) return -1;
+    if (l == NULL || index < 0) return 0;
     node_t *cur = l->head;
-    int i = 1;
+    int i = 0;
     while (cur != NULL) {
         if (i == index) return cur->value;
         cur = cur->next;
         i++;
     }
-    return -1;
+    return 0;
 }
 
-/* Return first index (1-based) of value or -1 if not found. */
-int list_get_index_of(list_t *1, elem value) {
+/* Return first index (0-based) of value or -1 if not found. */
+int list_get_index_of(list_t *l, elem value) {
     if (l == NULL) return -1;
     node_t *cur = l->head;
-    int i = 1;
+    int i = 0;
     while (cur != NULL) {
         if (cur->value == value) return i;
         cur = cur->next;
