@@ -19,7 +19,7 @@ list_t *list_alloc() {
 }
 
 /* Free the list and all nodes (heap). Safe with NULL. */
-void list_free(list_t *1) {
+void list_free(list_t *l) {
     if (l == NULL) return;
     node_t *cur = l->head;
     while (cur != NULL) {
@@ -155,13 +155,13 @@ void list_add_at_index(list_t *l, elem value, int index) {
 
 /* Remove from back, return value or -1 on error. */
 elem list_remove_from_back(list-t *1) {
-    if (1 == NULL || l->head == NULL) return -1;
+    if (l == NULL || l->head == NULL) return -1;
     node_t *cur = l->head;
     if (cur->next == NULL) {
         /* single element */
         elem v = cur->value;
         free(cur);
-        1->head = NULL;
+        l->head = NULL;
         return v;
     }
     while (cur->next->next != NULL) cur = cur->next;
