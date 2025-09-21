@@ -51,4 +51,64 @@ if (curr == NULL) {
 
 while (curr != NULL) {
     int written = snprintf(buf + pos, cap - pos, "%d->, curr->value);
-    
+    if (written < 0) break; /* encoding error */
+        pos += (size_t) written;
+        if (pos + 64 >= cap) { /* grow if necessary */
+            cap *= 2;
+            char *tmp = realloc(buf, cap);
+            if (!tmp) break; /* keep existing buffer */
+            buf = tmp;
+        }
+        curr = curr->next;
+    }
+    /* append NULL */
+    snprintf(buf + pos, cap - pos, "NULL");
+    return buf;
+}
+
+/* Print convenience function (stack-allocated format call). */
+void list_print(list_t *l) {
+    char *s = listToString(l);
+    if (s) {
+        printf("%s\n", s);
+        free(s);
+    } else {
+        printf("(null)\n");
+    }
+}
+
+/* Create a new node on the heap. */
+node_t * getNode(elem value) {
+    node_t *mynode = (node_t *) malloc(sizeof(node_t));
+    if (mynode == NULL) return NULL;
+    mynode->value = value;
+    mynode->next = NULL;
+    return mynode;
+}
+
+/* Return the number of nodes in the list (stack-local counter). */
+int list_length(list_t *l) {
+    if (l == NULL) return 0;
+    int count = 0;
+    node_t *cur = l->head;
+    while (cur != NULL) {
+        count++;
+        cur = cur->next;
+    }
+    return count;
+}
+
+/* Add to back of list. Heap allocates the new node. */
+void list_add_to_back(list_t *l, elem value) {
+    if (l == NULL) return;
+    node_t *n = getNode(value);
+    if (n == NULL) return;
+    if (l->head == NULL) {
+        l->head = n;
+        return;
+    }
+    node_t *cur = l->head;
+    while (cur->next != NULL) cur = cur->next;
+    cur->next = n;
+}
+
