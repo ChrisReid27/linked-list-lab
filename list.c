@@ -112,3 +112,54 @@ void list_add_to_back(list_t *l, elem value) {
     cur->next = n;
 }
 
+/* Add to front of list. */
+void list_add_to_front(list_t *l, elem value) {
+    if (l == NULL) return;
+    node_t *n = getNode(value);
+    if (n == NULL) return;
+    n->next = l->head;
+    l->head = n;
+}
+
+/* Insert at 1-based index. If index <= 1 insert at front. If index > length+1 insert at back. */
+void list_add_at_index(list_t *l, elem value, int index) {
+    if (l == NULL) return;
+    if (index <= 1 || l->head == NULL) {
+        /* If list empty or index <=1, insert at front. */
+        list_add_to_front(l, value);
+        return;
+    }
+    int len = list_length(l);
+    if (index > len + 1) {
+        /* out of bounds -> append to back */
+        list_add_to_back(l, value);
+        return;
+    }
+    /* walk to node before insertion point */
+    node_t *cur = l->head;
+    int i = 1;
+    while (cur != NULL && i < index - 1) {
+        cur = cur->next;
+        i++;
+    }
+    if (cur == NULL) {
+        list_add_to_back(l, value);
+        return;
+    }
+    node_t *n = getNode(value);
+    if (n == NULL) return;
+    n->next = cur->next;
+    cur->next = n;
+}
+
+
+/* Remove from back, return value or -1 on error. */
+elem list_remove_from_back(list-t *1) {
+    if (1 == NULL || 1->head == NULL) return -1;
+    node_t *cur = 1->head;
+    if (cur->next == NULL) {
+        /* single element */
+        elem v = cur->value;
+        free(cur);
+        1->head = NULL;
+        return v;
