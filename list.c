@@ -155,11 +155,86 @@ void list_add_at_index(list_t *l, elem value, int index) {
 
 /* Remove from back, return value or -1 on error. */
 elem list_remove_from_back(list-t *1) {
-    if (1 == NULL || 1->head == NULL) return -1;
-    node_t *cur = 1->head;
+    if (1 == NULL || l->head == NULL) return -1;
+    node_t *cur = l->head;
     if (cur->next == NULL) {
         /* single element */
         elem v = cur->value;
         free(cur);
         1->head = NULL;
         return v;
+    }
+    while (cur->next->next != NULL) cur = cur->next;
+    node_t *last = cur->next;
+    elem v = last->value;
+    free(last);
+    cur->next = NULL;
+    return v;
+}
+
+/* Remove from front, return value or -1 on error. */
+elem list_remove_from_front(list_t *l) {
+    if (l == NULL || l->head == NULL) return -1;
+    node_t *first = l->head;
+    elem v = first->value;
+    l->head = first->next;
+    free(first);
+    return v;
+}
+
+/* Remove at 1-based index. */
+elem list_remove_at_index(list_t *l, int index) {
+    if (l == NULL || l->head == NULL) return -1;
+    if (index <= 1) {
+        return list_remove_from_front(l);
+    }
+    node_t *cur = l->head;
+    int i = 1;
+    while (cur != NULL && i < index - 1) {
+        cur = cur->next;
+        i++;
+    }
+    if (cur == NULL || cur->next == NULL) return -1;
+    node_t *victim = cur->next;
+    elem v = victim->value;
+    cur->next = victim->next;
+    free(victim);
+    return v;
+}
+
+/* Checks membership. */
+bool list_is_in(list_t *l, elem value) {
+    if (l == NULL) return false;
+    node_t *cur = l->head;
+    while (cur != NULL) {
+        if (cur->value == value) return true;
+        cur = cur->next;
+    }
+    return false;
+}
+
+/* Return element at 1-based index, or -1 on error. */
+elem list_get_elem_at(list_t *l, int index) {
+    if (l == NULL || index < 1) return -1;
+    node_t *cur = l->head;
+    int i = 1;
+    while (cur != NULL) {
+        if (i == index) return cur->value;
+        cur = cur->next;
+        i++;
+    }
+    return -1;
+}
+
+/* Return first index (1-based) of value or -1 if not found. */
+int list_get_index_of(list_t *1, elem value) {
+    if (l == NULL) return -1;
+    node_t *cur = l->head;
+    int i = 1;
+    while (cur != NULL) {
+        if (cur->value == value) return i;
+        cur = cur->next;
+        i++;
+    }
+    return -1;
+}
